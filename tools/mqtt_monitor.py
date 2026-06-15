@@ -21,7 +21,9 @@ sensor_data = {
     "temperature": 0,
     "humidity": 0,
     "timestamp": "",
-    "count": 0
+    "count": 0,
+    "alarm": 0,
+    "led_blink": 0
 }
 
 class TCPServer:
@@ -95,8 +97,12 @@ class TCPServer:
                     sensor_data["humidity"] = payload.get("humidity", 0)
                     sensor_data["timestamp"] = datetime.now().strftime("%H:%M:%S")
                     sensor_data["count"] = payload.get("count", 0)
-                    
-                    print(f"Received: Temp={sensor_data['temperature']}C, Humid={sensor_data['humidity']}%, Count={sensor_data['count']}")
+                    sensor_data["alarm"] = payload.get("alarm", 0)
+                    sensor_data["led_blink"] = payload.get("led_blink", 0)
+
+                    alarm_str = "⚠ ALARM!" if sensor_data["alarm"] else "OK"
+                    blink_str = "↯ 闪烁" if sensor_data["led_blink"] else "● 常亮"
+                    print(f"Received: Temp={sensor_data['temperature']}C, Humid={sensor_data['humidity']}%, Count={sensor_data['count']}, Alarm={alarm_str}, LED={blink_str}")
                     
         except Exception as e:
             print(f"Parse error: {e}: {data}")
@@ -111,50 +117,66 @@ class SensorMonitorGUI:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("STM32温湿度监控")
-        self.root.geometry("400x300")
-        self.root.resizable(False, False)
+        self.root.geometry("520x480")
+        self.root.resizable(True, True)
+        self.root.minsize(440, 400)
         
         self.server = TCPServer(TCP_PORT)
         self.setup_ui()
         
     def setup_ui(self):
-        title_label = ttk.Label(self.root, text="STM32温湿度监控系统", font=("Arial", 16, "bold"))
-        title_label.pack(pady=10)
-        
+        title_label = ttk.Label(self.root, text="STM32温湿度监控系统", font=("Arial", 18, "bold"))
+        title_label.pack(pady=12)
+
         status_frame = ttk.LabelFrame(self.root, text="连接状态")
-        status_frame.pack(fill="x", padx=10, pady=5)
-        
-        self.status_label = ttk.Label(status_frame, text="TCP Server: 运行中 (端口: 1883)", foreground="green")
-        self.status_label.pack(pady=5)
-        
+        status_frame.pack(fill="x", padx=15, pady=6)
+
+        self.status_label = ttk.Label(status_frame, text="TCP Server: 运行中 (端口: 1883)", foreground="green", font=("Arial", 11))
+        self.status_label.pack(pady=8)
+
         data_frame = ttk.LabelFrame(self.root, text="传感器数据")
-        data_frame.pack(fill="x", padx=10, pady=5)
-        
+        data_frame.pack(fill="x", padx=15, pady=6)
+
         temp_frame = ttk.Frame(data_frame)
-        temp_frame.pack(fill="x", pady=5)
-        
-        ttk.Label(temp_frame, text="温度:", font=("Arial", 12)).pack(side="left", padx=10)
-        self.temp_label = ttk.Label(temp_frame, text="-- C", font=("Arial", 14, "bold"), foreground="blue")
-        self.temp_label.pack(side="left", padx=10)
-        
+        temp_frame.pack(fill="x", pady=6)
+
+        ttk.Label(temp_frame, text="温度:", font=("Arial", 14)).pack(side="left", padx=12)
+        self.temp_label = ttk.Label(temp_frame, text="-- C", font=("Arial", 18, "bold"), foreground="blue")
+        self.temp_label.pack(side="left", padx=12)
+
         humid_frame = ttk.Frame(data_frame)
-        humid_frame.pack(fill="x", pady=5)
-        
-        ttk.Label(humid_frame, text="湿度:", font=("Arial", 12)).pack(side="left", padx=10)
-        self.humid_label = ttk.Label(humid_frame, text="-- %", font=("Arial", 14, "bold"), foreground="green")
-        self.humid_label.pack(side="left", padx=10)
-        
+        humid_frame.pack(fill="x", pady=6)
+
+        ttk.Label(humid_frame, text="湿度:", font=("Arial", 14)).pack(side="left", padx=12)
+        self.humid_label = ttk.Label(humid_frame, text="-- %", font=("Arial", 18, "bold"), foreground="green")
+        self.humid_label.pack(side="left", padx=12)
+
         info_frame = ttk.Frame(data_frame)
-        info_frame.pack(fill="x", pady=5)
-        
-        ttk.Label(info_frame, text="更新时间:", font=("Arial", 10)).pack(side="left", padx=10)
-        self.time_label = ttk.Label(info_frame, text="--:--:--", font=("Arial", 10))
-        self.time_label.pack(side="left", padx=5)
-        
-        ttk.Label(info_frame, text="计数:", font=("Arial", 10)).pack(side="left", padx=10)
-        self.count_label = ttk.Label(info_frame, text="0", font=("Arial", 10))
-        self.count_label.pack(side="left", padx=5)
-        
+        info_frame.pack(fill="x", pady=6)
+
+        ttk.Label(info_frame, text="更新时间:", font=("Arial", 11)).pack(side="left", padx=12)
+        self.time_label = ttk.Label(info_frame, text="--:--:--", font=("Arial", 11))
+        self.time_label.pack(side="left", padx=6)
+
+        ttk.Label(info_frame, text="计数:", font=("Arial", 11)).pack(side="left", padx=12)
+        self.count_label = ttk.Label(info_frame, text="0", font=("Arial", 11))
+        self.count_label.pack(side="left", padx=6)
+
+        # 报警状态
+        alarm_frame = ttk.LabelFrame(self.root, text="报警状态")
+        alarm_frame.pack(fill="x", padx=15, pady=6)
+
+        alarm_info = ttk.Frame(alarm_frame)
+        alarm_info.pack(fill="x", pady=10)
+
+        ttk.Label(alarm_info, text="报警:", font=("Arial", 14)).pack(side="left", padx=12)
+        self.alarm_label = ttk.Label(alarm_info, text="--", font=("Arial", 18, "bold"))
+        self.alarm_label.pack(side="left", padx=12)
+
+        ttk.Label(alarm_info, text="LED:", font=("Arial", 14)).pack(side="left", padx=24)
+        self.led_label = ttk.Label(alarm_info, text="--", font=("Arial", 18, "bold"))
+        self.led_label.pack(side="left", padx=12)
+
         button_frame = ttk.Frame(self.root)
         button_frame.pack(fill="x", padx=10, pady=10)
         
@@ -180,6 +202,18 @@ class SensorMonitorGUI:
         self.humid_label.config(text=f"{sensor_data['humidity']} %")
         self.time_label.config(text=sensor_data['timestamp'])
         self.count_label.config(text=str(sensor_data['count']))
+
+        # 报警状态
+        if sensor_data.get("alarm", 0):
+            self.alarm_label.config(text="⚠ 报警中!", foreground="red")
+        else:
+            self.alarm_label.config(text="✓ 正常", foreground="green")
+
+        # LED 状态
+        if sensor_data.get("led_blink", 0):
+            self.led_label.config(text="↯ 闪烁中", foreground="orange")
+        else:
+            self.led_label.config(text="● 常亮", foreground="green")
         
     def run(self):
         def update_loop():

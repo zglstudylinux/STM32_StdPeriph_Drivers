@@ -13,6 +13,11 @@ STM32_StdPeriph_Drivers/
 ├── libraries/                 # STM32标准库（通用）
 ├── templates/                 # 项目模板
 ├── drivers/                   # 外设驱动（可复用）
+│   ├── README.md              # 驱动总索引（含引脚总览）
+│   ├── system/                # 系统驱动
+│   │   └── delay/            # SysTick延时驱动
+│   │       ├── delay.c/h
+│   │       └── README.md
 │   ├── communication/         # 通信模块
 │   │   ├── esp8266/          # ESP8266 WiFi驱动
 │   │   │   ├── esp8266.c/h
@@ -29,9 +34,13 @@ STM32_StdPeriph_Drivers/
 │   │   └── dht11/            # DHT11温湿度驱动
 │   │       ├── dht11.c/h
 │   │       └── README.md
-│   └── control/              # 控制模块（预留）
+│   └── control/              # 控制模块
+│       └── led_buzzer/       # LED和蜂鸣器驱动
+│           ├── led_buzzer.c/h
+│           └── README.md
 ├── examples/                  # 示例项目
-│   └── dht11_oled_mqtt/      # 温湿度采集+OLED显示+TCP上传
+│   ├── dht11_oled_mqtt/      # 温湿度采集+OLED显示+TCP上传
+│   └── dht11_oled_mqtt_alarm/ # LED闪烁+蜂鸣器报警+温湿度监控
 │       ├── Start/             # 启动文件
 │       ├── Library/           # STM32标准库
 │       ├── System/            # 系统驱动
@@ -42,6 +51,7 @@ STM32_StdPeriph_Drivers/
 │       ├── stm32f1x_custom.cfg # OpenOCD配置
 │       └── README.md          # 项目说明
 └── tools/                     # 工具脚本
+    ├── setup_env.sh           # 工具链自动检测
     ├── mqtt_monitor.py        # 上位机监控程序
     └── serial_monitor.py      # 串口监控工具
 ```
@@ -109,10 +119,12 @@ openocd -f interface/stlink.cfg -f stm32f1x_custom.cfg -c "program Project.hex r
 
 | 目录 | 驱动名称 | 说明 |
 |------|----------|------|
+| `drivers/system/delay` | SysTick延时驱动 | 微秒/毫秒/秒延时 |
 | `drivers/communication/esp8266` | ESP8266 WiFi驱动 | 提供WiFi连接和TCP通信功能 |
 | `drivers/communication/usart` | USART串口驱动 | 提供串口发送和接收功能 |
 | `drivers/display/oled` | OLED显示驱动 | 支持128x64 OLED显示 |
 | `drivers/sensor/dht11` | DHT11温湿度驱动 | 读取温湿度数据 |
+| `drivers/control/led_buzzer` | LED&蜂鸣器驱动 | 多路LED控制 + 有源蜂鸣器 |
 
 ## 📋 示例项目说明
 
@@ -122,6 +134,14 @@ openocd -f interface/stlink.cfg -f stm32f1x_custom.cfg -c "program Project.hex r
 - OLED实时显示数据
 - ESP8266连接WiFi上传到上位机
 - 串口输出调试信息
+
+### dht11_oled_mqtt_alarm
+**功能**: 温湿度采集 + OLED显示 + WiFi上传 + LED闪烁报警 + 蜂鸣器报警
+- 包含 `dht11_oled_mqtt` 全部功能
+- PC13/PC14 LED 默认常亮（系统运行指示）
+- PC15 蜂鸣器报警
+- 温度 > 28°C 或湿度 > 80% 触发报警：LED交替闪烁（1s间隔）+ 蜂鸣器响
+- 恢复正常后自动回到常亮静音状态
 
 ## 🔍 故障排除
 
