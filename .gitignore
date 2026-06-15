@@ -53,3 +53,19 @@ dkms.conf
 
 # debug information files
 *.dwo
+
+# Python cache
+__pycache__/
+
+# Machine-specific toolchain config
+tools/tools_paths.conf
+
+# Build artifacts (example projects)
+examples/*/Project.elf
+examples/*/Project.hex
+examples/*/Project.bin
+examples/*/Project.map
+examples/*/Start/*.o
+examples/*/Library/*.o
+examples/*/System/*.o
+examples/*/User/*.o

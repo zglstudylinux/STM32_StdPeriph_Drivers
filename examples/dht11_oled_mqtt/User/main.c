@@ -79,9 +79,9 @@ int main(void) {
             OLED_ShowNum(2, 9, data.humidity_dec, 1);
             OLED_ShowString(2, 10, "%");
             
-            sprintf(send_buffer, "{\"temperature\":%d.%d,\"humidity\":%d.%d,\"count\":%d}", 
-                    data.temperature, data.temperature_dec, 
-                    data.humidity, data.humidity_dec, counter);
+            sprintf(send_buffer, "{\"temperature\":%d.%d,\"humidity\":%d.%d,\"count\":%lu}",
+                    data.temperature, data.temperature_dec,
+                    data.humidity, data.humidity_dec, (unsigned long)counter);
             
             ret = ESP8266_ConnectTCP(SERVER_IP, SERVER_PORT);
             if (ret == 0) {
