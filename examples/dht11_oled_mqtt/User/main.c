@@ -1,5 +1,5 @@
 #include "stm32f10x.h"
-#include "usart.c"
+#include "usart.h"
 #include "dht11.h"
 #include "oled.h"
 #include "esp8266.h"
